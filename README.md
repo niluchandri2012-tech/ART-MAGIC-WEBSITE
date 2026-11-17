@@ -1,47 +1,45 @@
-# Art Magic — Loading Section (Section 1)
+# Art Magic — Section 2: Homepage hero
 
-A single self-contained `index.html`: no build step, no npm, no CDN, no external
-fonts, no remote images. Drop it in a GitHub Pages repo root and it runs.
+`index.html` — the hero section, self-contained: no build step, no npm, no CDN,
+no external fonts, no remote images, no JavaScript at all. It works with
+JavaScript disabled.
 
-## Integration
+`loader.html` — the Section 1 loading screen, kept here unchanged so it isn't
+lost. It is not part of this section's deliverable.
 
-The loader is an overlay with a public API. It auto-mounts once in this
-standalone file; for real use, mount it above your homepage:
+## What is on the page
 
-```js
-window.ArtMagicLoader.mount({
-  container: document.body,
-  onComplete: () => {
-    // the loader has been removed from the DOM; show the site
-  }
-});
+- `Art Magic` — the page's single `h1`.
+- `Cakes Made With Love` — tagline.
+- `Freshly baked celebration cakes, made to order.` — supporting line.
+- A two-tier pink-and-cream celebration cake, drawn as inline SVG.
+- One call to action: `Order on WhatsApp` → `https://wa.me/919732433427`,
+  opening in a new tab with `rel="noopener noreferrer"`.
 
-// anywhere later:
-window.ArtMagicLoader.destroy();
-```
+Nothing else: no navigation, no footer, no second button, no extra sections.
 
-On success it removes itself from the DOM, restores the body styles it changed,
-cancels its animation frames and timers, calls `onComplete` exactly once and
-dispatches `artmagic:loader-complete` exactly once on `document`. It never
-touches `window.location` or history.
+## Cake visual
 
-Because this file is the loader only, the page is blank white after the exit —
-that is intentional. Mount it over the real homepage and the honeycomb
-transition reveals the page beneath.
+Drawn as inline SVG (the brief's first preference). No photograph, no base64
+image, no remote URL. It is marked decorative (`aria-hidden`), not focusable
+and not clickable. To swap in a real photograph later, replace the `<svg
+class="cake">` element with an `<img>` of the same aspect ratio — the layout
+reserves the space either way.
+
+## Placing it beneath the loader
+
+The hero renders on its own and does not know the loader exists. To combine
+them: make the loader the overlay (`position: fixed; inset: 0`) and put this
+`<main class="hero">` in the document beneath it. The loader's honeycomb exit
+reveals the hero already painted underneath, with no blank intermediate screen.
 
 ## Where to change things
 
-- `GEO` — wheel centre, radius, angular spacing, arc radius, blob and pointer
-  geometry (design px in a 1152 x 2048 space that is uniformly scaled to fit).
-- `MOTION` — tilt, selection magnification, opacity falloff.
-- `TIMING` — entrance, spin, spring, hold, honeycomb, overshoot in item
-  positions, and the start angle. Total is ~3.1 s.
-- `HONEY` — honeycomb cell size and the DOM-node cap.
+- `:root` — background, ink, and the pink used by the button.
+- `.hero` — padding, gaps, and the `100svh` minimum height.
+- `.hero__art` — `max-width` of the cake block.
+- `.cake` — `viewBox` and the SVG gradients for the cake itself.
+- `@keyframes am-rise` — the entrance motion, and the `.rise--*` delays.
 
-The faint rim arc is the `.am-arc` SVG in the markup. Delete that element to
-remove it; nothing else depends on it.
-
-## Reduced motion
-
-`prefers-reduced-motion: reduce` shows the settled Baking state briefly, exits
-with a short fade and completes normally.
+Reduced motion: with `prefers-reduced-motion: reduce` no entrance animation is
+applied at all, so the final state is shown immediately.

@@ -1,845 +1,309 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<meta name="color-scheme" content="light" />
-<title>Art Magic</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<meta name="theme-color" content="#FFFCF9">
+<title>Art Magic — Cakes Made With Love</title>
 <style>
-  html, body {
-    margin: 0;
-    padding: 0;
-    width: 100%;
-    background: #ffffff;
-    -webkit-text-size-adjust: 100%;
+  :root {
+    --bg: #FFFCF9;
+    --ink: #2A2724;
+    --ink-soft: #6E6763;
+    --pink: #D9486A;
+    --pink-dark: #C23D5D;
+    --focus: #2A2724;
   }
+
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { -webkit-text-size-adjust: 100%; }
+
+  html, body { margin: 0; padding: 0; }
+
   body {
+    background: var(--bg);
+    color: var(--ink);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
   }
 
-  /* ---------- loader shell ---------- */
-  .am-loader {
-    position: fixed;
-    top: 0; right: 0; bottom: 0; left: 0;
-    z-index: 2147483000;
-    background: #ffffff;
-    overflow: hidden;
-    touch-action: none;
-    -webkit-user-select: none;
-    user-select: none;
-    /* pure-CSS bail-out if the script never runs: never trap the page */
-    animation: am-bail 0s linear 7s forwards;
-  }
-  @keyframes am-bail {
-    to { opacity: 0; visibility: hidden; pointer-events: none; }
+  /* ---------- hero shell ---------- */
+  .hero {
+    min-height: 100vh;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(14px, 3vh, 26px);
+    padding:
+      calc(env(safe-area-inset-top, 0px) + clamp(22px, 5vh, 46px))
+      clamp(20px, 6vw, 40px)
+      calc(env(safe-area-inset-bottom, 0px) + clamp(20px, 4vh, 40px));
   }
 
-  /* ---------- design-space stage (1152 x 2048, uniformly scaled) ---------- */
-  .am-stage {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 1152px;
-    height: 2048px;
-    margin: -1024px 0 0 -576px;
-    transform-origin: 50% 50%;
-    transform: scale(var(--am-k, 1));
-    pointer-events: none;
+  /* ---------- type block ---------- */
+  .hero__head {
+    text-align: center;
+    max-width: 34rem;
+    width: 100%;
   }
 
-  /* ---------- faint rim arc ---------- */
-  .am-arc {
-    position: absolute;
-    left: 0; top: 0;
-    width: 1152px;
-    height: 2048px;
-    overflow: visible;
-  }
-  .am-arc path {
-    fill: none;
-    stroke: rgba(0, 0, 0, 0.115);
-    stroke-width: 5;
-    stroke-linecap: round;
+  .brand {
+    margin: 0;
+    font-size: clamp(15px, 4.1vw, 18px);
+    font-weight: 700;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--ink);
   }
 
-  /* ---------- stationary pointer ---------- */
-  .am-pointer {
-    position: absolute;
-    left: 826px;
-    top: 1006px;
-    width: 106px;
-    height: 37px;
-    border-radius: 19px;
-    background: #4a4e4d;
+  .tagline {
+    margin: clamp(12px, 2vh, 18px) 0 0;
+    font-size: clamp(29px, 8.4vw, 42px);
+    line-height: 1.08;
+    font-weight: 500;
+    letter-spacing: -0.022em;
+    text-wrap: balance;
   }
 
-  /* ---------- wheel ---------- */
-  .am-wheel {
-    position: absolute;
-    left: 0; top: 0;
-    width: 0; height: 0;
+  .lede {
+    margin: clamp(10px, 1.7vh, 15px) auto 0;
+    max-width: 30ch;
+    font-size: clamp(14.5px, 3.8vw, 16.5px);
+    line-height: 1.55;
+    font-weight: 400;
+    color: var(--ink-soft);
+    text-wrap: balance;
   }
 
-  .am-item {
-    position: absolute;
-    left: 0; top: 0;
-    width: 0; height: 0;
-    will-change: transform;
-  }
-  .am-item.is-idle { will-change: auto; }
-
-  .am-blob {
-    position: absolute;
-    left: -84px;
-    top: -61px;
-    width: 168px;
-    height: 122px;
-    border-radius: 46% 46% 46% 46% / 50% 50% 50% 50%;
-    color: var(--am-stroke, #7b8794);
+  /* ---------- cake ---------- */
+  .hero__art {
+    width: 100%;
+    max-width: 382px;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-sizing: border-box;
-    border: 0 solid transparent;
-  }
-  .am-blob::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background: var(--am-fill, #eef2f7);
-    opacity: var(--am-fill-op, 0);
-    pointer-events: none;
-  }
-  .am-blob svg {
-    position: relative;
-    z-index: 1;
-    opacity: var(--am-icon-op, 0);
-    width: 80px;
-    height: 80px;
-    display: block;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.25;
-    stroke-linecap: round;
-    stroke-linejoin: round;
   }
 
-  .am-label {
-    position: absolute;
-    right: 142px;
-    top: 0;
-    transform: translateY(-50%);
-    white-space: nowrap;
-    opacity: 0;
-    font-size: 47px;
-    line-height: 1;
-    font-weight: 400;
-    letter-spacing: -0.005em;
-    color: #555555;
-    padding: 0;
-    border: 0 solid transparent;
+  .cake {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+  }
+
+  /* ---------- call to action ---------- */
+  .hero__cta {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 56px;
+    padding: 0 clamp(24px, 6.5vw, 34px);
     border-radius: 999px;
-    background: transparent;
-    box-sizing: border-box;
-    transition:
-      right 260ms cubic-bezier(.34,.9,.35,1),
-      font-size 260ms cubic-bezier(.34,.9,.35,1),
-      color 260ms ease,
-      background-color 260ms ease,
-      border-color 260ms ease,
-      border-width 260ms cubic-bezier(.34,.9,.35,1),
-      padding 260ms cubic-bezier(.34,.9,.35,1);
+    background: var(--pink);
+    color: #ffffff;
+    text-decoration: none;
+    font-size: clamp(16px, 4.2vw, 17.5px);
+    font-weight: 600;
+    letter-spacing: 0.004em;
+    box-shadow: 0 12px 26px -14px rgba(217, 72, 106, 0.75);
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 160ms ease, box-shadow 200ms ease, transform 160ms ease;
   }
 
-  /* selected item */
-  .am-item.is-on .am-label {
-    right: 82px;
-    font-size: 51px;
-    color: #383838;
-    background: #ffffff;
-    border: 4px solid #cba7b3;
-    height: 121px;
-    line-height: 113px;
-    padding: 0 48px;
-    display: block;
-  }
-  .am-item.is-on .am-blob {
-    background: #fdeefc;
-    color: #c264ac;
-    border: 4px solid #c07baa;
-  }
-  .am-item.is-on .am-blob svg {
-    width: 114px;
-    height: 114px;
-    stroke-width: 1.15;
+  .btn:hover {
+    background: var(--pink-dark);
+    box-shadow: 0 16px 30px -14px rgba(194, 61, 93, 0.8);
+    transform: translateY(-1px);
   }
 
-  .am-item.is-pulse .am-label {
-    animation: am-pulse 450ms ease-in-out 1 both;
-  }
-  @keyframes am-pulse {
-    0%   { box-shadow: 0 0 0 0 rgba(203, 167, 179, 0); }
-    38%  { box-shadow: 0 0 0 7px rgba(203, 167, 179, 0.16); }
-    100% { box-shadow: 0 0 0 0 rgba(203, 167, 179, 0); }
+  .btn:active { transform: translateY(0); }
+
+  .btn:focus-visible {
+    outline: 3px solid var(--focus);
+    outline-offset: 3px;
   }
 
-  /* ---------- screen-reader status ---------- */
-  .am-sr {
-    position: absolute;
-    width: 1px; height: 1px;
-    margin: -1px; padding: 0;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    clip-path: inset(50%);
-    white-space: nowrap;
-    border: 0;
+  .btn__icon {
+    width: 21px;
+    height: 21px;
+    flex: none;
+    fill: currentColor;
   }
 
-  @media (prefers-reduced-motion: reduce) {
-    .am-arc, .am-pointer { transition: none; }
-    .am-item { will-change: auto; }
+  /* ---------- entrance motion ---------- */
+  @media (prefers-reduced-motion: no-preference) {
+    .rise {
+      animation: am-rise 620ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+    }
+    .rise--1 { animation-delay: 40ms; }
+    .rise--2 { animation-delay: 110ms; }
+    .rise--3 { animation-delay: 175ms; }
+    .rise--4 { animation-delay: 240ms; }
+    .rise--5 { animation-delay: 320ms; }
+  }
+
+  @keyframes am-rise {
+    from { opacity: 0; transform: translate3d(0, 10px, 0); }
+    to   { opacity: 1; transform: translate3d(0, 0, 0); }
   }
 </style>
 </head>
 <body>
 
-<div class="am-loader" id="am-loader">
-  <div class="am-stage" id="am-stage">
+<main class="hero">
 
-    <svg class="am-arc" id="am-arc" viewBox="0 0 1152 2048" aria-hidden="true" focusable="false">
-      <path d="" />
-    </svg>
-
-    <div class="am-pointer" id="am-pointer"></div>
-
-    <div class="am-wheel" id="am-wheel" aria-hidden="true">
-
-      <div class="am-item" style="--am-fill:#e7f1fc; --am-stroke:#6d9ecf">
-        <span class="am-label">Sleep</span>
-        <span class="am-blob">
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <circle cx="10.5" cy="13.6" r="6.6"/>
-            <path d="M8.1 12.5c.5.6 1.3.6 1.8 0"/>
-            <path d="M11.5 12.5c.5.6 1.3.6 1.8 0"/>
-            <path d="M8.9 15.7c.8.6 2.1.6 2.9 0"/>
-            <path d="M16.4 3.4h3.2l-3.2 3.5h3.2"/>
-          </svg>
-        </span>
-      </div>
-
-      <div class="am-item" style="--am-fill:#fcded3; --am-stroke:#dd8a63">
-        <span class="am-label">Skipping</span>
-        <span class="am-blob">
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M3.6 20.2C4.6 7.2 19.4 7.2 20.4 20.2"/>
-            <circle cx="12" cy="8.3" r="1.7"/>
-            <path d="M12 10.1v3.5"/>
-            <path d="M12 11.4 9.9 13.5M12 11.4l2.1 2.1"/>
-            <path d="M12 13.6 10.5 16.6M12 13.6l1.5 3"/>
-          </svg>
-        </span>
-      </div>
-
-      <div class="am-item" style="--am-fill:#fbe3f0; --am-stroke:#cf6d84">
-        <span class="am-label">Power Training</span>
-        <span class="am-blob">
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <circle cx="16.7" cy="7.3" r="2.9"/>
-            <path d="M14.2 9.5c-1.7 1.7-4.2 2.3-6.4 1.6-2.2-.7-3.7-2.6-3.9-4.8"/>
-            <path d="M4.4 20.9v-3.6a3.1 3.1 0 0 1 3.1-3.1h3.6"/>
-          </svg>
-        </span>
-      </div>
-
-      <div class="am-item" style="--am-fill:#fdeefc; --am-stroke:#c264ac">
-        <span class="am-label">Baking</span>
-        <span class="am-blob">
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <path d="M3 4.4l2.5 2.9"/>
-            <path d="M5.5 7.3c3.3.5 5 3.1 3.9 5.9-1.2 3-5 3.4-6.8 1-1.8-2.4-.8-5.9 2.9-6.9z"/>
-            <path d="M5.5 7.3c-1.7 2.1-1.8 5-.3 7"/>
-            <path d="M12 18.4a2 2 0 0 1-2.8-2.8l5.6-5.6a2 2 0 0 1 2.8 2.8z"/>
-            <path d="M10.2 17.6l-1.6 1.6M18.8 9.4l1.6-1.6"/>
-          </svg>
-        </span>
-      </div>
-
-      <div class="am-item" style="--am-fill:#e5eff5; --am-stroke:#6fb6e2">
-        <span class="am-label">Swimming</span>
-        <span class="am-blob">
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <circle cx="8.2" cy="7.4" r="2.2"/>
-            <path d="M10.3 10.5l3.7-2 3.5 1.8"/>
-            <path d="M4.3 16.2c1.4-1.3 2.8-1.3 4.2 0s2.8 1.3 4.2 0 2.8-1.3 4.2 0 2.8 1.3 4.2 0"/>
-          </svg>
-        </span>
-      </div>
-
-      <div class="am-item" style="--am-fill:#fff2d2; --am-stroke:#e8c74e">
-        <span class="am-label">Tennis</span>
-        <span class="am-blob">
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <circle cx="12" cy="12" r="8.2"/>
-            <path d="M5.7 6.3c3.1 2.3 3.1 9.1 0 11.4"/>
-            <path d="M18.3 6.3c-3.1 2.3-3.1 9.1 0 11.4"/>
-          </svg>
-        </span>
-      </div>
-
-      <div class="am-item" style="--am-fill:#f3f3fa; --am-stroke:#a9a4d6">
-        <span class="am-label">Basketball</span>
-        <span class="am-blob">
-          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-            <circle cx="12" cy="12" r="8.2"/>
-            <path d="M12 3.8v16.4"/>
-            <path d="M3.8 12h16.4"/>
-            <path d="M6.4 5.9c2.7 2 2.7 10.2 0 12.2"/>
-            <path d="M17.6 5.9c-2.7 2-2.7 10.2 0 12.2"/>
-          </svg>
-        </span>
-      </div>
-
-    </div>
+  <div class="hero__head">
+    <h1 class="brand rise rise--1">Art Magic</h1>
+    <p class="tagline rise rise--2">Cakes Made With Love</p>
+    <p class="lede rise rise--3">Freshly baked celebration cakes, made to order.</p>
   </div>
 
-  <p class="am-sr" role="status" aria-live="polite">Loading Art Magic.</p>
-</div>
+  <div class="hero__art rise rise--4">
+<svg class="cake" viewBox="52 148 456 336" role="presentation" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="cakeSideTop" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#F2D8CB"/>
+          <stop offset="0.14" stop-color="#FFFBF7"/>
+          <stop offset="0.5" stop-color="#FDF0E8"/>
+          <stop offset="0.84" stop-color="#EFD2C4"/>
+          <stop offset="1" stop-color="#DEB7A8"/>
+        </linearGradient>
+        <linearGradient id="cakeSideBase" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#F0D5C8"/>
+          <stop offset="0.16" stop-color="#FFF9F4"/>
+          <stop offset="0.54" stop-color="#FCEEE5"/>
+          <stop offset="0.86" stop-color="#EDCEBF"/>
+          <stop offset="1" stop-color="#DBB3A4"/>
+        </linearGradient>
+        <radialGradient id="cakeTopFace" cx="0.38" cy="0.3" r="0.9">
+          <stop offset="0" stop-color="#FFFDFB"/>
+          <stop offset="0.66" stop-color="#FDF2EA"/>
+          <stop offset="1" stop-color="#F1D8CA"/>
+        </radialGradient>
+        <linearGradient id="cakeFrost" x1="0" y1="0" x2="0.18" y2="1">
+          <stop offset="0" stop-color="#FCD9DF"/>
+          <stop offset="0.5" stop-color="#F6BEC9"/>
+          <stop offset="1" stop-color="#E79AAA"/>
+        </linearGradient>
+        <radialGradient id="cakeBead" cx="0.34" cy="0.26" r="0.9">
+          <stop offset="0" stop-color="#FFFFFF"/>
+          <stop offset="0.58" stop-color="#FDECEE"/>
+          <stop offset="1" stop-color="#EDC0C9"/>
+        </radialGradient>
+        <radialGradient id="cakeShadow" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stop-color="#8A6A5E" stop-opacity="0.36"/>
+          <stop offset="0.5" stop-color="#8A6A5E" stop-opacity="0.13"/>
+          <stop offset="1" stop-color="#8A6A5E" stop-opacity="0"/>
+        </radialGradient>
+        <linearGradient id="cakeShade" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0.45" stop-color="#8E5F4A" stop-opacity="0"/>
+          <stop offset="0.86" stop-color="#8E5F4A" stop-opacity="0.10"/>
+          <stop offset="1" stop-color="#7E5240" stop-opacity="0.20"/>
+        </linearGradient>
+        <linearGradient id="cakeBlush" x1="0" y1="1" x2="0" y2="0">
+          <stop offset="0" stop-color="#F6CFCF" stop-opacity="0.55"/>
+          <stop offset="0.42" stop-color="#F6CFCF" stop-opacity="0"/>
+        </linearGradient>
+        <radialGradient id="cakeContact" cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0" stop-color="#B98D7B" stop-opacity="0.28"/>
+          <stop offset="0.65" stop-color="#B98D7B" stop-opacity="0.08"/>
+          <stop offset="1" stop-color="#B98D7B" stop-opacity="0"/>
+        </radialGradient>
+      </defs>
+
+      <ellipse cx="280" cy="452" rx="222" ry="28" fill="url(#cakeShadow)"/>
+
+      <!-- lower tier -->
+      <path d="M85 300A195 44 0 0 1 475 300L475 410A195 44 0 0 1 85 410Z" fill="url(#cakeSideBase)"/>
+      <path d="M85 300A195 44 0 0 1 475 300L475 410A195 44 0 0 1 85 410Z" fill="url(#cakeBlush)"/>
+      <path d="M85 300A195 44 0 0 1 475 300L475 410A195 44 0 0 1 85 410Z" fill="url(#cakeShade)"/>
+      <ellipse cx="280" cy="300" rx="195" ry="44" fill="url(#cakeTopFace)"/>
+      <ellipse cx="280" cy="300" rx="150" ry="34" fill="url(#cakeContact)"/>
+
+      <!-- upper tier -->
+      <path d="M142 186A138 31 0 0 1 418 186L418 284A138 31 0 0 1 142 284Z" fill="url(#cakeSideTop)"/>
+      <path d="M142 186A138 31 0 0 1 418 186L418 284A138 31 0 0 1 142 284Z" fill="url(#cakeBlush)"/>
+      <path d="M142 186A138 31 0 0 1 418 186L418 284A138 31 0 0 1 142 284Z" fill="url(#cakeShade)"/>
+      <ellipse cx="280" cy="186" rx="138" ry="31" fill="url(#cakeTopFace)"/>
+
+      <!-- frosting with drips -->
+      <g fill="url(#cakeFrost)">
+          <path d="M399.6 192.3L399.6 235.3A9 9 0 0 0 417.6 235.3L417.6 192.3Z"/>
+          <path d="M388.1 199.3L388.1 221.3A8 8 0 0 0 404.1 221.3L404.1 199.3Z"/>
+          <path d="M365.3 205.4L365.3 259.4A10 10 0 0 0 385.3 259.4L385.3 205.4Z"/>
+          <path d="M339.6 210.1L339.6 240.1A8 8 0 0 0 355.6 240.1L355.6 210.1Z"/>
+          <path d="M306.1 213.0L306.1 262.0A9 9 0 0 0 324.1 262.0L324.1 213.0Z"/>
+          <path d="M272.0 214.0L272.0 240.0A8 8 0 0 0 288.0 240.0L288.0 214.0Z"/>
+          <path d="M234.9 213.0L234.9 269.0A10 10 0 0 0 254.9 269.0L254.9 213.0Z"/>
+          <path d="M204.4 210.1L204.4 234.1A8 8 0 0 0 220.4 234.1L220.4 210.1Z"/>
+          <path d="M175.7 205.4L175.7 246.4A9 9 0 0 0 193.7 246.4L193.7 205.4Z"/>
+          <path d="M155.9 199.3L155.9 219.3A8 8 0 0 0 171.9 219.3L171.9 199.3Z"/>
+          <path d="M142.4 192.3L142.4 227.3A9 9 0 0 0 160.4 227.3L160.4 192.3Z"/>
+      </g>
+      <ellipse cx="280" cy="184" rx="132" ry="28" fill="url(#cakeFrost)"/>
+      <ellipse cx="252" cy="176" rx="56" ry="11" fill="#FFFFFF" opacity="0.26"/>
+
+      <!-- piping -->
+      <g fill="url(#cakeBead)">
+          <circle cx="415.9" cy="289.4" r="5.8"/>
+          <circle cx="404.0" cy="297.6" r="5.8"/>
+          <circle cx="382.6" cy="304.7" r="5.8"/>
+          <circle cx="353.1" cy="310.3" r="5.8"/>
+          <circle cx="318.0" cy="313.8" r="5.8"/>
+          <circle cx="280.0" cy="315.0" r="5.8"/>
+          <circle cx="242.0" cy="313.8" r="5.8"/>
+          <circle cx="206.9" cy="310.3" r="5.8"/>
+          <circle cx="177.4" cy="304.7" r="5.8"/>
+          <circle cx="156.0" cy="297.6" r="5.8"/>
+          <circle cx="144.1" cy="289.4" r="5.8"/>
+      </g>
+      <g fill="url(#cakeBead)">
+          <circle cx="473.5" cy="415.4" r="6.6"/>
+          <circle cx="464.5" cy="424.2" r="6.6"/>
+          <circle cx="447.6" cy="432.5" r="6.6"/>
+          <circle cx="423.6" cy="439.8" r="6.6"/>
+          <circle cx="393.4" cy="445.8" r="6.6"/>
+          <circle cx="358.4" cy="450.3" r="6.6"/>
+          <circle cx="320.1" cy="453.1" r="6.6"/>
+          <circle cx="280.0" cy="454.0" r="6.6"/>
+          <circle cx="239.9" cy="453.1" r="6.6"/>
+          <circle cx="201.6" cy="450.3" r="6.6"/>
+          <circle cx="166.6" cy="445.8" r="6.6"/>
+          <circle cx="136.4" cy="439.8" r="6.6"/>
+          <circle cx="112.4" cy="432.5" r="6.6"/>
+          <circle cx="95.5" cy="424.2" r="6.6"/>
+          <circle cx="86.5" cy="415.4" r="6.6"/>
+      </g>
+    </svg>
+  </div>
+
+  <div class="hero__cta rise rise--5">
+    <a class="btn"
+       href="https://wa.me/919732433427"
+       target="_blank"
+       rel="noopener noreferrer"
+       aria-label="Order on WhatsApp — opens in a new tab">
+      <svg class="btn__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2zm0 1.67c2.2 0 4.27.86 5.82 2.42a8.2 8.2 0 0 1 2.42 5.82c0 4.54-3.7 8.24-8.25 8.24a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.12.82.83-3.04-.2-.31a8.2 8.2 0 0 1-1.26-4.38c0-4.54 3.7-8.24 8.25-8.24zm-2.6 4.1c-.2 0-.52.07-.79.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.06 3.3 5.05 4.5.7.3 1.25.48 1.68.62.71.22 1.35.19 1.86.12.57-.09 1.75-.72 2-1.41.25-.7.25-1.29.17-1.42-.07-.12-.27-.2-.57-.35-.3-.15-1.75-.86-2.02-.96-.27-.1-.47-.15-.67.15-.2.3-.77.96-.94 1.16-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.48-1.76-1.66-2.06-.17-.3-.02-.46.13-.61.14-.14.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.67-1.61-.92-2.2-.24-.58-.49-.5-.67-.51h-.5z"/>
+      </svg>
+      <span class="btn__label">Order on WhatsApp</span>
+    </a>
+  </div>
+
+</main>
 
-<script>
-(function () {
-  "use strict";
-
-  /* =====================================================================
-     1. CONFIGURATION — every tunable value lives here
-     ===================================================================== */
-
-  var DESIGN = { w: 1152, h: 2048 };
-
-  var GEO = {
-    cx: 2244,              // wheel centre X (design px, off-stage to the right)
-    cy: 1025,              // wheel centre Y
-    radius: 1560,          // item anchor radius from wheel centre
-    stepDeg: 7.8,          // angular spacing between items
-    anchorIndex: 3,        // index of the item that rests at the pointer
-    arcRadius: 1389,       // faint rim arc radius
-    arcSpanDeg: 29.1,      // rim arc half-span
-    blobW: 168,
-    blobH: 122,
-    pointerX: 826,
-    pointerY: 1006,
-    pointerW: 106,
-    pointerH: 37
-  };
-
-  var MOTION = {
-    tiltFactor: 0.8,       // item tilt = -angle * tiltFactor
-    scaleSelected: 0.14,   // extra scale at the selection point
-    scaleFalloff: 0.02,    // per extra position beyond 1
-    fadeLinear: 0.075,     // opacity falloff, linear term
-    fadeQuad: 0.014        // opacity falloff, quadratic term
-  };
-
-  var TIMING = {
-    entrance: 550,
-    spin: 850,
-    spring: 600,
-    hold: 450,
-    honeycomb: 650,
-    startSpin: -2.6,       // wheel angle at t=0, in item positions
-    overshoot: 2.0,        // how many positions Baking passes the pointer
-    stagger: 26,           // per-item entrance ramp (ms)
-    staggerRamp: 200,      // duration of each item's entrance ramp
-    honeycombCellFade: 260,
-    reduceHold: 700,
-    reduceExit: 220,
-    watchdog: 2600         // extra ms after the timeline before a forced bail-out
-  };
-  TIMING.total = TIMING.entrance + TIMING.spin + TIMING.spring + TIMING.hold + TIMING.honeycomb;
-  TIMING.moveEnd = TIMING.entrance + TIMING.spin;
-  TIMING.settleAt = TIMING.moveEnd + TIMING.spring;
-
-  var HONEY = {
-    radius: 34,            // hex circumradius (viewport px)
-    maxCells: 900,
-    overscale: 1.045       // slight overlap kills hairline seams
-  };
-
-  /* =====================================================================
-     2. SMALL HELPERS
-     ===================================================================== */
-
-  var DEG = Math.PI / 180;
-  var STEP_RAD = GEO.stepDeg * DEG;
-
-  function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
-  function lerp(a, b, t) { return a + (b - a) * t; }
-
-  function easeInOutCubic(t) {
-    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-  }
-
-  // damped spring, normalised so f(0) = 0 and f(1) ~= 1
-  function springEase(t) {
-    return 1 - Math.exp(-5.5 * t) * Math.cos(6.5 * t);
-  }
-
-  function scaleAt(pos) {
-    var a = Math.abs(pos);
-    var boost = 1 + MOTION.scaleSelected * Math.pow(Math.max(0, 1 - a), 1.6);
-    var fall = 1 - MOTION.scaleFalloff * Math.max(0, a - 1);
-    return boost * fall;
-  }
-
-  function opacityAt(pos) {
-    var a = Math.abs(pos);
-    return clamp(1 - MOTION.fadeLinear * a - MOTION.fadeQuad * a * a, 0, 1);
-  }
-
-  /* =====================================================================
-     3. HONEYCOMB MASK (SVG, luminance)
-     ===================================================================== */
-
-  var MASK_ID = "am-honey-mask";
-
-  function hexPath(cx, cy, r) {
-    var d = "";
-    for (var i = 0; i < 6; i++) {
-      var a = (60 * i) * DEG; // flat-top hexagon
-      var x = cx + r * Math.cos(a);
-      var y = cy + r * Math.sin(a);
-      d += (i === 0 ? "M" : "L") + x.toFixed(2) + " " + y.toFixed(2);
-    }
-    return d + "Z";
-  }
-
-  function buildMask(vw, vh, ox, oy) {
-    var svgNS = "http://www.w3.org/2000/svg";
-    var old = document.getElementById(MASK_ID);
-    if (old && old.parentNode) { old.parentNode.removeChild(old); }
-
-    var r = HONEY.radius;
-    var dx = 1.5 * r;
-    var dy = Math.sqrt(3) * r;
-    var cols, rows, guard = 0;
-    do {
-      cols = Math.ceil(vw / dx) + 2;
-      rows = Math.ceil(vh / dy) + 2;
-      if (cols * rows <= HONEY.maxCells) { break; }
-      r *= 1.15; dx = 1.5 * r; dy = Math.sqrt(3) * r;
-      guard++;
-    } while (guard < 12);
-
-    var svg = document.createElementNS(svgNS, "svg");
-    svg.setAttribute("id", MASK_ID + "-svg");
-    svg.setAttribute("width", String(vw));
-    svg.setAttribute("height", String(vh));
-    svg.setAttribute("aria-hidden", "true");
-    svg.setAttribute("focusable", "false");
-    svg.style.cssText = "position:absolute;width:0;height:0;overflow:hidden;pointer-events:none;";
-
-    var mask = document.createElementNS(svgNS, "mask");
-    mask.setAttribute("id", MASK_ID);
-    mask.setAttribute("maskUnits", "userSpaceOnUse");
-    mask.setAttribute("maskContentUnits", "userSpaceOnUse");
-    mask.setAttribute("x", "0");
-    mask.setAttribute("y", "0");
-    mask.setAttribute("width", String(vw));
-    mask.setAttribute("height", String(vh));
-
-    var bg = document.createElementNS(svgNS, "rect");
-    bg.setAttribute("x", "0");
-    bg.setAttribute("y", "0");
-    bg.setAttribute("width", String(vw));
-    bg.setAttribute("height", String(vh));
-    bg.setAttribute("fill", "#fff");
-    mask.appendChild(bg);
-
-    var cells = [];
-    var maxD = 1;
-    var i, j, cx, cy, p, d;
-
-    for (j = 0; j < rows; j++) {
-      for (i = 0; i < cols; i++) {
-        cx = i * dx;
-        cy = j * dy + ((i % 2) ? dy / 2 : 0);
-        p = document.createElementNS(svgNS, "path");
-        p.setAttribute("d", hexPath(cx, cy, r * HONEY.overscale));
-        p.style.fill = "#fff";
-        mask.appendChild(p);
-        d = Math.hypot(cx - ox, cy - oy);
-        if (d > maxD) { maxD = d; }
-        cells.push({ el: p, d: d });
-      }
-    }
-
-    for (i = 0; i < cells.length; i++) {
-      cells[i].delay = cells[i].d / maxD;
-    }
-
-    svg.appendChild(mask);
-    document.body.appendChild(svg);
-    return { svg: svg, cells: cells };
-  }
-
-  var maskSupported = (function () {
-    try {
-      if (!window.CSS || !CSS.supports) { return false; }
-      return CSS.supports("mask-image", "url(#am)") ||
-             CSS.supports("-webkit-mask-image", "url(#am)");
-    } catch (e) { return false; }
-  })();
-
-  /* =====================================================================
-     4. LOADER INSTANCE
-     ===================================================================== */
-
-  var current = null;
-
-  function mount(options) {
-    if (current) { return current; }
-
-    options = options || {};
-    var container = options.container || document.body;
-    var onComplete = typeof options.onComplete === "function" ? options.onComplete : null;
-
-    var loader = document.getElementById("am-loader");
-    if (!loader) {
-      loader = document.createElement("div");
-      loader.className = "am-loader";
-      loader.id = "am-loader";
-      container.appendChild(loader);
-    }
-
-    var stage = loader.querySelector("#am-stage");
-    var wheel = loader.querySelector("#am-wheel");
-    var arcSvg = loader.querySelector("#am-arc");
-    var pointer = loader.querySelector("#am-pointer");
-    var itemEls = loader.querySelectorAll(".am-item");
-    var selectedEl = itemEls[GEO.anchorIndex];
-
-    var prevOverflow = document.body.style.overflow;
-    var prevOverscroll = document.body.style.overscrollBehavior;
-    document.body.style.overflow = "hidden";
-    document.body.style.overscrollBehavior = "none";
-
-    var inst = {
-      loader: loader,
-      container: container,
-      onComplete: onComplete,
-      items: [],
-      mask: null,
-      t0: 0,
-      raf: 0,
-      timers: [],
-      done: false,
-      settled: false,
-      pulsing: false,
-      exiting: false,
-      hiddenAt: 0,
-      k: 1,
-      reduced: window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    };
-
-    for (var i = 0; i < itemEls.length; i++) {
-      inst.items.push({
-        el: itemEls[i],
-        label: itemEls[i].querySelector(".am-label"),
-        blob: itemEls[i].querySelector(".am-blob")
-      });
-    }
-
-    /* ---- geometry ---- */
-    function measure() {
-      var vw = window.innerWidth || document.documentElement.clientWidth || DESIGN.w;
-      var vh = window.innerHeight || document.documentElement.clientHeight || DESIGN.h;
-      inst.k = Math.min(vw / DESIGN.w, vh / DESIGN.h);
-      stage.style.setProperty("--am-k", String(inst.k));
-      inst.vw = vw;
-      inst.vh = vh;
-      return { vw: vw, vh: vh };
-    }
-
-    function originPoint(vw, vh) {
-      var left = (vw - DESIGN.w * inst.k) / 2;
-      var top = (vh - DESIGN.h * inst.k) / 2;
-      return {
-        x: left + (GEO.pointerX + GEO.pointerW / 2) * inst.k,
-        y: top + (GEO.pointerY + GEO.pointerH / 2) * inst.k
-      };
-    }
-
-    /* ---- arc path ---- */
-    (function drawArc() {
-      var span = GEO.arcSpanDeg * DEG;
-      var pts = [];
-      for (var s = 0; s <= 72; s++) {
-        var a = -span + (2 * span) * (s / 72);
-        var x = GEO.cx - GEO.arcRadius * Math.cos(a);
-        var y = GEO.cy + GEO.arcRadius * Math.sin(a);
-        pts.push((s === 0 ? "M" : "L") + x.toFixed(2) + " " + y.toFixed(2));
-      }
-      arcSvg.querySelector("path").setAttribute("d", pts.join(""));
-    })();
-
-    /* ---- render one frame ---- */
-    function render(spin, t) {
-      var n = inst.items.length;
-      for (var i = 0; i < n; i++) {
-        var it = inst.items[i];
-        var pos = (i - GEO.anchorIndex) + spin;
-        var th = pos * STEP_RAD;
-        var x = GEO.cx - GEO.radius * Math.cos(th);
-        var y = GEO.cy + GEO.radius * Math.sin(th);
-        var sc = scaleAt(pos);
-        var rot = -pos * GEO.stepDeg * MOTION.tiltFactor;
-
-        var ramp = 1;
-        if (t < TIMING.entrance + TIMING.staggerRamp) {
-          ramp = clamp((t - i * TIMING.stagger) / TIMING.staggerRamp, 0, 1);
-        }
-        var op = opacityAt(pos);
-        var fillOp = op * ramp;
-        var iconOp = (0.62 + 0.38 * op) * ramp;
-
-        it.el.style.transform =
-          "translate3d(" + x.toFixed(2) + "px," + y.toFixed(2) + "px,0) " +
-          "rotate(" + rot.toFixed(3) + "deg) scale(" + sc.toFixed(4) + ")";
-        it.label.style.opacity = (op * ramp).toFixed(3);
-        it.blob.style.setProperty("--am-fill-op", fillOp.toFixed(3));
-        it.blob.style.setProperty("--am-icon-op", iconOp.toFixed(3));
-      }
-    }
-
-    /* ---- spin position at time t ---- */
-    function spinAt(t) {
-      if (t <= 0) { return TIMING.startSpin; }
-      if (t < TIMING.moveEnd) {
-        return lerp(TIMING.startSpin, TIMING.overshoot, easeInOutCubic(t / TIMING.moveEnd));
-      }
-      if (t < TIMING.settleAt) {
-        var u = (t - TIMING.moveEnd) / TIMING.spring;
-        return TIMING.overshoot * (1 - springEase(u));
-      }
-      return 0;
-    }
-
-    /* ---- settle / pulse ---- */
-    function settle() {
-      if (inst.settled || inst.done) { return; }
-      inst.settled = true;
-      render(0, TIMING.settleAt);
-      for (var i = 0; i < inst.items.length; i++) {
-        inst.items[i].el.classList.add("is-idle");
-      }
-      if (selectedEl) {
-        selectedEl.classList.add("is-on");
-        if (!inst.reduced) {
-          selectedEl.classList.add("is-pulse");
-          inst.pulsing = true;
-        }
-      }
-    }
-
-    /* ---- exit ---- */
-    function honeycombExit() {
-      if (inst.exiting || inst.done) { return; }
-      inst.exiting = true;
-      if (selectedEl) { selectedEl.classList.remove("is-pulse"); }
-      inst.pulsing = false;
-
-      var m = measure();
-      var o = originPoint(m.vw, m.vh);
-
-      if (!maskSupported) {
-        shortExit();
-        return;
-      }
-
-      try {
-        inst.mask = buildMask(m.vw, m.vh, o.x, o.y);
-        loader.style.maskImage = "url(#" + MASK_ID + ")";
-        loader.style.webkitMaskImage = "url(#" + MASK_ID + ")";
-        loader.style.maskSize = "100% 100%";
-        loader.style.webkitMaskSize = "100% 100%";
-        loader.style.maskPosition = "0 0";
-        loader.style.webkitMaskPosition = "0 0";
-        loader.style.maskRepeat = "no-repeat";
-        loader.style.webkitMaskRepeat = "no-repeat";
-
-        var fade = TIMING.honeycombCellFade;
-        var spread = Math.max(60, TIMING.honeycomb - fade);
-        var cells = inst.mask.cells;
-
-        for (var i = 0; i < cells.length; i++) {
-          cells[i].el.style.transition = "fill " + fade + "ms linear " + (cells[i].delay * spread).toFixed(0) + "ms";
-        }
-        // force style flush so the transition actually runs
-        void loader.offsetWidth;
-        for (var j = 0; j < cells.length; j++) {
-          cells[j].el.style.fill = "#000";
-        }
-        inst.timers.push(setTimeout(finish, TIMING.honeycomb + 40));
-      } catch (err) {
-        if (window.console) { console.warn("[ArtMagicLoader] honeycomb failed, using short exit.", err); }
-        shortExit();
-      }
-    }
-
-    function shortExit() {
-      loader.style.transition = "opacity " + TIMING.reduceExit + "ms ease-out";
-      loader.style.opacity = "0";
-      inst.timers.push(setTimeout(finish, TIMING.reduceExit + 30));
-    }
-
-    /* ---- completion ---- */
-    function finish() {
-      if (inst.done) { return; }
-      inst.done = true;
-      destroy();
-      if (onComplete) {
-        try { onComplete(); } catch (e) { if (window.console) { console.error(e); } }
-      }
-      try {
-        document.dispatchEvent(new CustomEvent("artmagic:loader-complete", { bubbles: true }));
-      } catch (e) {
-        var ev = document.createEvent("Event");
-        ev.initEvent("artmagic:loader-complete", true, false);
-        document.dispatchEvent(ev);
-      }
-    }
-
-    /* ---- destroy ---- */
-    function destroy() {
-      if (inst.raf) { cancelAnimationFrame(inst.raf); inst.raf = 0; }
-      for (var i = 0; i < inst.timers.length; i++) { clearTimeout(inst.timers[i]); }
-      inst.timers.length = 0;
-      window.removeEventListener("resize", onResize, false);
-      window.removeEventListener("orientationchange", onResize, false);
-      document.removeEventListener("visibilitychange", onVisibility, false);
-      if (inst.mask && inst.mask.svg && inst.mask.svg.parentNode) {
-        inst.mask.svg.parentNode.removeChild(inst.mask.svg);
-      }
-      inst.mask = null;
-      if (loader && loader.parentNode) { loader.parentNode.removeChild(loader); }
-      document.body.style.overflow = prevOverflow;
-      document.body.style.overscrollBehavior = prevOverscroll;
-      if (current === inst) { current = null; }
-    }
-
-    /* ---- resize ---- */
-    var resizeTimer = 0;
-    function onResize() {
-      if (inst.done) { return; }
-      measure();
-      if (!inst.exiting) { render(spinAt(performance.now() - inst.t0), performance.now() - inst.t0); }
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(function () {
-        if (inst.done || !inst.exiting) { return; }
-        // exiting: rebuild the mask for the new size, keep it clearing
-        try {
-          var m = measure();
-          var o = originPoint(m.vw, m.vh);
-          inst.mask = buildMask(m.vw, m.vh, o.x, o.y);
-          var cells = inst.mask.cells;
-          for (var i = 0; i < cells.length; i++) { cells[i].el.style.fill = "#000"; }
-        } catch (e) { /* keep going */ }
-      }, 220);
-    }
-
-    /* ---- visibility ---- */
-    function onVisibility() {
-      if (inst.done) { return; }
-      if (document.hidden) {
-        inst.hiddenAt = performance.now();
-        if (inst.raf) { cancelAnimationFrame(inst.raf); inst.raf = 0; }
-      } else if (inst.hiddenAt) {
-        inst.t0 += performance.now() - inst.hiddenAt;
-        inst.hiddenAt = 0;
-        if (!inst.done) { inst.raf = requestAnimationFrame(tick); }
-      }
-    }
-
-    /* ---- main loop ---- */
-    function tick(now) {
-      if (inst.done) { return; }
-      if (document.hidden) { inst.hiddenAt = now; inst.raf = 0; return; }
-      var t = now - inst.t0;
-
-      if (t < TIMING.settleAt) {
-        render(spinAt(t), t);
-        inst.raf = requestAnimationFrame(tick);
-        return;
-      }
-      if (!inst.settled) {
-        settle();
-      }
-      if (t < TIMING.settleAt + TIMING.hold) {
-        inst.raf = requestAnimationFrame(tick);
-        return;
-      }
-      inst.raf = 0;
-      honeycombExit();
-    }
-
-    /* ---- start ---- */
-    measure();
-    render(TIMING.startSpin, 0);
-    window.addEventListener("resize", onResize, false);
-    window.addEventListener("orientationchange", onResize, false);
-    document.addEventListener("visibilitychange", onVisibility, false);
-
-    inst.t0 = performance.now();
-
-    if (inst.reduced) {
-      // final state at once, brief hold, restrained exit
-      render(0, TIMING.settleAt);
-      settle();
-      if (selectedEl) { selectedEl.classList.remove("is-pulse"); }
-      inst.timers.push(setTimeout(function () {
-        if (inst.done) { return; }
-        inst.exiting = true;
-        shortExit();
-      }, TIMING.reduceHold));
-    } else {
-      inst.raf = requestAnimationFrame(tick);
-    }
-
-    // watchdog: never leave the page covered
-    inst.timers.push(setTimeout(function () {
-      if (inst.done) { return; }
-      if (window.console) { console.warn("[ArtMagicLoader] watchdog fired; forcing cleanup."); }
-      if (!inst.exiting) { inst.exiting = true; shortExit(); }
-      else { finish(); }
-    }, TIMING.total + TIMING.watchdog));
-
-    inst.destroy = destroy;
-    current = inst;
-    return inst;
-  }
-
-  /* =====================================================================
-     5. PUBLIC API
-     ===================================================================== */
-
-  window.ArtMagicLoader = {
-    mount: mount,
-    destroy: function () {
-      if (current && current.destroy) { current.destroy(); }
-      current = null;
-    },
-    isSupported: { honeycomb: maskSupported }
-  };
-
-  // Auto-mount once for this standalone page.
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", function () { mount({ container: document.body }); });
-  } else {
-    mount({ container: document.body });
-  }
-})();
-</script>
 </body>
 </html>

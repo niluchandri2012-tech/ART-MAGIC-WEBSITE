@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light" />
+<title>Art Magic</title>
+<style>
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    background: #ffffff;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* ---------- loader shell ---------- */
+  .am-loader {
+    position: fixed;
+    top: 0; right: 0; bottom: 0; left: 0;
+    z-index: 2147483000;
+    background: #ffffff;
+    overflow: hidden;
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    /* pure-CSS bail-out if the script never runs: never trap the page */
+    animation: am-bail 0s linear 7s forwards;
+  }
+  @keyframes am-bail {
+    to { opacity: 0; visibility: hidden; pointer-events: none; }
+  }
+
+  /* ---------- design-space stage (1152 x 2048, uniformly scaled) ---------- */
+  .am-stage {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 1152px;
+    height: 2048px;
+    margin: -1024px 0 0 -576px;
+    transform-origin: 50% 50%;
+    transform: scale(var(--am-k, 1));
+    pointer-events: none;
+  }
+
+  /* ---------- faint rim arc ---------- */
+  .am-arc {
+    position: absolute;
+    left: 0; top: 0;
+    width: 1152px;
+    height: 2048px;
+    overflow: visible;
+  }
+  .am-arc path {
+    fill: none;
+    stroke: rgba(0, 0, 0, 0.115);
+    stroke-width: 5;
+    stroke-linecap: round;
+  }
+
+  /* ---------- stationary pointer ---------- */
+  .am-pointer {
+    position: absolute;
+    left: 826px;
+    top: 1006px;
+    width: 106px;
+    height: 37px;
+    border-radius: 19px;
+    background: #4a4e4d;
+  }
+
+  /* ---------- wheel ---------- */
+  .am-wheel {
+    position: absolute;
+    left: 0; top: 0;
+    width: 0; height: 0;
+  }
+
+  .am-item {
+    position: absolute;
+    left: 0; top: 0;
+    width: 0; height: 0;
+    will-change: transform;
+  }
+  .am-item.is-idle { will-change: auto; }
+
+  .am-blob {
+    position: absolute;
+    left: -84px;
+    top: -61px;
+    width: 168px;
+    height: 122px;
+    border-radius: 46% 46% 46% 46% / 50% 50% 50% 50%;
+    color: var(--am-stroke, #7b8794);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    border: 0 solid transparent;
+  }
+  .am-blob::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--am-fill, #eef2f7);
+    opacity: var(--am-fill-op, 0);
+    pointer-events: none;
+  }
+  .am-blob svg {
+    position: relative;
+    z-index: 1;
+    opacity: var(--am-icon-op, 0);
+    width: 80px;
+    height: 80px;
+    display: block;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.25;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .am-label {
+    position: absolute;
+    right: 142px;
+    top: 0;
+    transform: translateY(-50%);
+    white-space: nowrap;
+    opacity: 0;
+    font-size: 47px;
+    line-height: 1;
+    font-weight: 400;
+    letter-spacing: -0.005em;
+    color: #555555;
+    padding: 0;
+    border: 0 solid transparent;
+    border-radius: 999px;
+    background: transparent;
+    box-sizing: border-box;
+    transition:
+      right 260ms cubic-bezier(.34,.9,.35,1),
+      font-size 260ms cubic-bezier(.34,.9,.35,1),
+      color 260ms ease,
+      background-color 260ms ease,
+      border-color 260ms ease,
+      border-width 260ms cubic-bezier(.34,.9,.35,1),
+      padding 260ms cubic-bezier(.34,.9,.35,1);
+  }
+
+  /* selected item */
+  .am-item.is-on .am-label {
+    right: 82px;
+    font-size: 51px;
+    color: #383838;
+    background: #ffffff;
+    border: 4px solid #cba7b3;
+    height: 121px;
+    line-height: 113px;
+    padding: 0 48px;
+    display: block;
+  }
+  .am-item.is-on .am-blob {
+    background: #fdeefc;
+    color: #c264ac;
+    border: 4px solid #c07baa;
+  }
+  .am-item.is-on .am-blob svg {
+    width: 114px;
+    height: 114px;
+    stroke-width: 1.15;
+  }
+
+  .am-item.is-pulse .am-label {
+    animation: am-pulse 450ms ease-in-out 1 both;
+  }
+  @keyframes am-pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(203, 167, 179, 0); }
+    38%  { box-shadow: 0 0 0 7px rgba(203, 167, 179, 0.16); }
+    100% { box-shadow: 0 0 0 0 rgba(203, 167, 179, 0); }
+  }
+
+  /* ---------- screen-reader status ---------- */
+  .am-sr {
+    position: absolute;
+    width: 1px; height: 1px;
+    margin: -1px; padding: 0;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .am-arc, .am-pointer { transition: none; }
+    .am-item { will-change: auto; }
+  }
+</style>
+</head>
+<body>
+
+<div class="am-loader" id="am-loader">
+  <div class="am-stage" id="am-stage">
+
+    <svg class="am-arc" id="am-arc" viewBox="0 0 1152 2048" aria-hidden="true" focusable="false">
+      <path d="" />
+    </svg>
+
+    <div class="am-pointer" id="am-pointer"></div>
+
+    <div class="am-wheel" id="am-wheel" aria-hidden="true">
+
+      <div class="am-item" style="--am-fill:#e7f1fc; --am-stroke:#6d9ecf">
+        <span class="am-label">Sleep</span>
+        <span class="am-blob">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="10.5" cy="13.6" r="6.6"/>
+            <path d="M8.1 12.5c.5.6 1.3.6 1.8 0"/>
+            <path d="M11.5 12.5c.5.6 1.3.6 1.8 0"/>
+            <path d="M8.9 15.7c.8.6 2.1.6 2.9 0"/>
+            <path d="M16.4 3.4h3.2l-3.2 3.5h3.2"/>
+          </svg>
+        </span>
+      </div>
+
+      <div class="am-item" style="--am-fill:#fcded3; --am-stroke:#dd8a63">
+        <span class="am-label">Skipping</span>
+        <span class="am-blob">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M3.6 20.2C4.6 7.2 19.4 7.2 20.4 20.2"/>
+            <circle cx="12" cy="8.3" r="1.7"/>
+            <path d="M12 10.1v3.5"/>
+            <path d="M12 11.4 9.9 13.5M12 11.4l2.1 2.1"/>
+            <path d="M12 13.6 10.5 16.6M12 13.6l1.5 3"/>
+          </svg>
+        </span>
+      </div>
+
+      <div class="am-item" style="--am-fill:#fbe3f0; --am-stroke:#cf6d84">
+        <span class="am-label">Power Training</span>
+        <span class="am-blob">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="16.7" cy="7.3" r="2.9"/>
+            <path d="M14.2 9.5c-1.7 1.7-4.2 2.3-6.4 1.6-2.2-.7-3.7-2.6-3.9-4.8"/>
+            <path d="M4.4 20.9v-3.6a3.1 3.1 0 0 1 3.1-3.1h3.6"/>
+          </svg>
+        </span>
+      </div>
+
+      <div class="am-item" style="--am-fill:#fdeefc; --am-stroke:#c264ac">
+        <span class="am-label">Baking</span>
+        <span class="am-blob">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M3 4.4l2.5 2.9"/>
+            <path d="M5.5 7.3c3.3.5 5 3.1 3.9 5.9-1.2 3-5 3.4-6.8 1-1.8-2.4-.8-5.9 2.9-6.9z"/>
+            <path d="M5.5 7.3c-1.7 2.1-1.8 5-.3 7"/>
+            <path d="M12 18.4a2 2 0 0 1-2.8-2.8l5.6-5.6a2 2 0 0 1 2.8 2.8z"/>
+            <path d="M10.2 17.6l-1.6 1.6M18.8 9.4l1.6-1.6"/>
+          </svg>
+        </span>
+      </div>
+
+      <div class="am-item" style="--am-fill:#e5eff5; --am-stroke:#6fb6e2">
+        <span class="am-label">Swimming</span>
+        <span class="am-blob">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="8.2" cy="7.4" r="2.2"/>
+            <path d="M10.3 10.5l3.7-2 3.5 1.8"/>
+            <path d="M4.3 16.2c1.4-1.3 2.8-1.3 4.2 0s2.8 1.3 4.2 0 2.8-1.3 4.2 0 2.8 1.3 4.2 0"/>
+          </svg>
+        </span>
+      </div>
+
+      <div class="am-item" style="--am-fill:#fff2d2; --am-stroke:#e8c74e">
+        <span class="am-label">Tennis</span>
+        <span class="am-blob">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="8.2"/>
+            <path d="M5.7 6.3c3.1 2.3 3.1 9.1 0 11.4"/>
+            <path d="M18.3 6.3c-3.1 2.3-3.1 9.1 0 11.4"/>
+          </svg>
+        </span>
+      </div>
+
+      <div class="am-item" style="--am-fill:#f3f3fa; --am-stroke:#a9a4d6">
+        <span class="am-label">Basketball</span>
+        <span class="am-blob">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="12" cy="12" r="8.2"/>
+            <path d="M12 3.8v16.4"/>
+            <path d="M3.8 12h16.4"/>
+            <path d="M6.4 5.9c2.7 2 2.7 10.2 0 12.2"/>
+            <path d="M17.6 5.9c-2.7 2-2.7 10.2 0 12.2"/>
+          </svg>
+        </span>
+      </div>
+
+    </div>
+  </div>
+
+  <p class="am-sr" role="status" aria-live="polite">Loading Art Magic.</p>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* =====================================================================
+     1. CONFIGURATION — every tunable value lives here
+     ===================================================================== */
+
+  var DESIGN = { w: 1152, h: 2048 };
+
+  var GEO = {
+    cx: 2244,              // wheel centre X (design px, off-stage to the right)
+    cy: 1025,              // wheel centre Y
+    radius: 1560,          // item anchor radius from wheel centre
+    stepDeg: 7.8,          // angular spacing between items
+    anchorIndex: 3,        // index of the item that rests at the pointer
+    arcRadius: 1389,       // faint rim arc radius
+    arcSpanDeg: 29.1,      // rim arc half-span
+    blobW: 168,
+    blobH: 122,
+    pointerX: 826,
+    pointerY: 1006,
+    pointerW: 106,
+    pointerH: 37
+  };
+
+  var MOTION = {
+    tiltFactor: 0.8,       // item tilt = -angle * tiltFactor
+    scaleSelected: 0.14,   // extra scale at the selection point
+    scaleFalloff: 0.02,    // per extra position beyond 1
+    fadeLinear: 0.075,     // opacity falloff, linear term
+    fadeQuad: 0.014        // opacity falloff, quadratic term
+  };
+
+  var TIMING = {
+    entrance: 550,
+    spin: 850,
+    spring: 600,
+    hold: 450,
+    honeycomb: 650,
+    startSpin: -2.6,       // wheel angle at t=0, in item positions
+    overshoot: 2.0,        // how many positions Baking passes the pointer
+    stagger: 26,           // per-item entrance ramp (ms)
+    staggerRamp: 200,      // duration of each item's entrance ramp
+    honeycombCellFade: 260,
+    reduceHold: 700,
+    reduceExit: 220,
+    watchdog: 2600         // extra ms after the timeline before a forced bail-out
+  };
+  TIMING.total = TIMING.entrance + TIMING.spin + TIMING.spring + TIMING.hold + TIMING.honeycomb;
+  TIMING.moveEnd = TIMING.entrance + TIMING.spin;
+  TIMING.settleAt = TIMING.moveEnd + TIMING.spring;
+
+  var HONEY = {
+    radius: 34,            // hex circumradius (viewport px)
+    maxCells: 900,
+    overscale: 1.045       // slight overlap kills hairline seams
+  };
+
+  /* =====================================================================
+     2. SMALL HELPERS
+     ===================================================================== */
+
+  var DEG = Math.PI / 180;
+  var STEP_RAD = GEO.stepDeg * DEG;
+
+  function clamp(v, a, b) { return v < a ? a : (v > b ? b : v); }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+
+  function easeInOutCubic(t) {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
+
+  // damped spring, normalised so f(0) = 0 and f(1) ~= 1
+  function springEase(t) {
+    return 1 - Math.exp(-5.5 * t) * Math.cos(6.5 * t);
+  }
+
+  function scaleAt(pos) {
+    var a = Math.abs(pos);
+    var boost = 1 + MOTION.scaleSelected * Math.pow(Math.max(0, 1 - a), 1.6);
+    var fall = 1 - MOTION.scaleFalloff * Math.max(0, a - 1);
+    return boost * fall;
+  }
+
+  function opacityAt(pos) {
+    var a = Math.abs(pos);
+    return clamp(1 - MOTION.fadeLinear * a - MOTION.fadeQuad * a * a, 0, 1);
+  }
+
+  /* =====================================================================
+     3. HONEYCOMB MASK (SVG, luminance)
+     ===================================================================== */
+
+  var MASK_ID = "am-honey-mask";
+
+  function hexPath(cx, cy, r) {
+    var d = "";
+    for (var i = 0; i < 6; i++) {
+      var a = (60 * i) * DEG; // flat-top hexagon
+      var x = cx + r * Math.cos(a);
+      var y = cy + r * Math.sin(a);
+      d += (i === 0 ? "M" : "L") + x.toFixed(2) + " " + y.toFixed(2);
+    }
+    return d + "Z";
+  }
+
+  function buildMask(vw, vh, ox, oy) {
+    var svgNS = "http://www.w3.org/2000/svg";
+    var old = document.getElementById(MASK_ID);
+    if (old && old.parentNode) { old.parentNode.removeChild(old); }
+
+    var r = HONEY.radius;
+    var dx = 1.5 * r;
+    var dy = Math.sqrt(3) * r;
+    var cols, rows, guard = 0;
+    do {
+      cols = Math.ceil(vw / dx) + 2;
+      rows = Math.ceil(vh / dy) + 2;
+      if (cols * rows <= HONEY.maxCells) { break; }
+      r *= 1.15; dx = 1.5 * r; dy = Math.sqrt(3) * r;
+      guard++;
+    } while (guard < 12);
+
+    var svg = document.createElementNS(svgNS, "svg");
+    svg.setAttribute("id", MASK_ID + "-svg");
+    svg.setAttribute("width", String(vw));
+    svg.setAttribute("height", String(vh));
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("focusable", "false");
+    svg.style.cssText = "position:absolute;width:0;height:0;overflow:hidden;pointer-events:none;";
+
+    var mask = document.createElementNS(svgNS, "mask");
+    mask.setAttribute("id", MASK_ID);
+    mask.setAttribute("maskUnits", "userSpaceOnUse");
+    mask.setAttribute("maskContentUnits", "userSpaceOnUse");
+    mask.setAttribute("x", "0");
+    mask.setAttribute("y", "0");
+    mask.setAttribute("width", String(vw));
+    mask.setAttribute("height", String(vh));
+
+    var bg = document.createElementNS(svgNS, "rect");
+    bg.setAttribute("x", "0");
+    bg.setAttribute("y", "0");
+    bg.setAttribute("width", String(vw));
+    bg.setAttribute("height", String(vh));
+    bg.setAttribute("fill", "#fff");
+    mask.appendChild(bg);
+
+    var cells = [];
+    var maxD = 1;
+    var i, j, cx, cy, p, d;
+
+    for (j = 0; j < rows; j++) {
+      for (i = 0; i < cols; i++) {
+        cx = i * dx;
+        cy = j * dy + ((i % 2) ? dy / 2 : 0);
+        p = document.createElementNS(svgNS, "path");
+        p.setAttribute("d", hexPath(cx, cy, r * HONEY.overscale));
+        p.style.fill = "#fff";
+        mask.appendChild(p);
+        d = Math.hypot(cx - ox, cy - oy);
+        if (d > maxD) { maxD = d; }
+        cells.push({ el: p, d: d });
+      }
+    }
+
+    for (i = 0; i < cells.length; i++) {
+      cells[i].delay = cells[i].d / maxD;
+    }
+
+    svg.appendChild(mask);
+    document.body.appendChild(svg);
+    return { svg: svg, cells: cells };
+  }
+
+  var maskSupported = (function () {
+    try {
+      if (!window.CSS || !CSS.supports) { return false; }
+      return CSS.supports("mask-image", "url(#am)") ||
+             CSS.supports("-webkit-mask-image", "url(#am)");
+    } catch (e) { return false; }
+  })();
+
+  /* =====================================================================
+     4. LOADER INSTANCE
+     ===================================================================== */
+
+  var current = null;
+
+  function mount(options) {
+    if (current) { return current; }
+
+    options = options || {};
+    var container = options.container || document.body;
+    var onComplete = typeof options.onComplete === "function" ? options.onComplete : null;
+
+    var loader = document.getElementById("am-loader");
+    if (!loader) {
+      loader = document.createElement("div");
+      loader.className = "am-loader";
+      loader.id = "am-loader";
+      container.appendChild(loader);
+    }
+
+    var stage = loader.querySelector("#am-stage");
+    var wheel = loader.querySelector("#am-wheel");
+    var arcSvg = loader.querySelector("#am-arc");
+    var pointer = loader.querySelector("#am-pointer");
+    var itemEls = loader.querySelectorAll(".am-item");
+    var selectedEl = itemEls[GEO.anchorIndex];
+
+    var prevOverflow = document.body.style.overflow;
+    var prevOverscroll = document.body.style.overscrollBehavior;
+    document.body.style.overflow = "hidden";
+    document.body.style.overscrollBehavior = "none";
+
+    var inst = {
+      loader: loader,
+      container: container,
+      onComplete: onComplete,
+      items: [],
+      mask: null,
+      t0: 0,
+      raf: 0,
+      timers: [],
+      done: false,
+      settled: false,
+      pulsing: false,
+      exiting: false,
+      hiddenAt: 0,
+      k: 1,
+      reduced: window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    };
+
+    for (var i = 0; i < itemEls.length; i++) {
+      inst.items.push({
+        el: itemEls[i],
+        label: itemEls[i].querySelector(".am-label"),
+        blob: itemEls[i].querySelector(".am-blob")
+      });
+    }
+
+    /* ---- geometry ---- */
+    function measure() {
+      var vw = window.innerWidth || document.documentElement.clientWidth || DESIGN.w;
+      var vh = window.innerHeight || document.documentElement.clientHeight || DESIGN.h;
+      inst.k = Math.min(vw / DESIGN.w, vh / DESIGN.h);
+      stage.style.setProperty("--am-k", String(inst.k));
+      inst.vw = vw;
+      inst.vh = vh;
+      return { vw: vw, vh: vh };
+    }
+
+    function originPoint(vw, vh) {
+      var left = (vw - DESIGN.w * inst.k) / 2;
+      var top = (vh - DESIGN.h * inst.k) / 2;
+      return {
+        x: left + (GEO.pointerX + GEO.pointerW / 2) * inst.k,
+        y: top + (GEO.pointerY + GEO.pointerH / 2) * inst.k
+      };
+    }
+
+    /* ---- arc path ---- */
+    (function drawArc() {
+      var span = GEO.arcSpanDeg * DEG;
+      var pts = [];
+      for (var s = 0; s <= 72; s++) {
+        var a = -span + (2 * span) * (s / 72);
+        var x = GEO.cx - GEO.arcRadius * Math.cos(a);
+        var y = GEO.cy + GEO.arcRadius * Math.sin(a);
+        pts.push((s === 0 ? "M" : "L") + x.toFixed(2) + " " + y.toFixed(2));
+      }
+      arcSvg.querySelector("path").setAttribute("d", pts.join(""));
+    })();
+
+    /* ---- render one frame ---- */
+    function render(spin, t) {
+      var n = inst.items.length;
+      for (var i = 0; i < n; i++) {
+        var it = inst.items[i];
+        var pos = (i - GEO.anchorIndex) + spin;
+        var th = pos * STEP_RAD;
+        var x = GEO.cx - GEO.radius * Math.cos(th);
+        var y = GEO.cy + GEO.radius * Math.sin(th);
+        var sc = scaleAt(pos);
+        var rot = -pos * GEO.stepDeg * MOTION.tiltFactor;
+
+        var ramp = 1;
+        if (t < TIMING.entrance + TIMING.staggerRamp) {
+          ramp = clamp((t - i * TIMING.stagger) / TIMING.staggerRamp, 0, 1);
+        }
+        var op = opacityAt(pos);
+        var fillOp = op * ramp;
+        var iconOp = (0.62 + 0.38 * op) * ramp;
+
+        it.el.style.transform =
+          "translate3d(" + x.toFixed(2) + "px," + y.toFixed(2) + "px,0) " +
+          "rotate(" + rot.toFixed(3) + "deg) scale(" + sc.toFixed(4) + ")";
+        it.label.style.opacity = (op * ramp).toFixed(3);
+        it.blob.style.setProperty("--am-fill-op", fillOp.toFixed(3));
+        it.blob.style.setProperty("--am-icon-op", iconOp.toFixed(3));
+      }
+    }
+
+    /* ---- spin position at time t ---- */
+    function spinAt(t) {
+      if (t <= 0) { return TIMING.startSpin; }
+      if (t < TIMING.moveEnd) {
+        return lerp(TIMING.startSpin, TIMING.overshoot, easeInOutCubic(t / TIMING.moveEnd));
+      }
+      if (t < TIMING.settleAt) {
+        var u = (t - TIMING.moveEnd) / TIMING.spring;
+        return TIMING.overshoot * (1 - springEase(u));
+      }
+      return 0;
+    }
+
+    /* ---- settle / pulse ---- */
+    function settle() {
+      if (inst.settled || inst.done) { return; }
+      inst.settled = true;
+      render(0, TIMING.settleAt);
+      for (var i = 0; i < inst.items.length; i++) {
+        inst.items[i].el.classList.add("is-idle");
+      }
+      if (selectedEl) {
+        selectedEl.classList.add("is-on");
+        if (!inst.reduced) {
+          selectedEl.classList.add("is-pulse");
+          inst.pulsing = true;
+        }
+      }
+    }
+
+    /* ---- exit ---- */
+    function honeycombExit() {
+      if (inst.exiting || inst.done) { return; }
+      inst.exiting = true;
+      if (selectedEl) { selectedEl.classList.remove("is-pulse"); }
+      inst.pulsing = false;
+
+      var m = measure();
+      var o = originPoint(m.vw, m.vh);
+
+      if (!maskSupported) {
+        shortExit();
+        return;
+      }
+
+      try {
+        inst.mask = buildMask(m.vw, m.vh, o.x, o.y);
+        loader.style.maskImage = "url(#" + MASK_ID + ")";
+        loader.style.webkitMaskImage = "url(#" + MASK_ID + ")";
+        loader.style.maskSize = "100% 100%";
+        loader.style.webkitMaskSize = "100% 100%";
+        loader.style.maskPosition = "0 0";
+        loader.style.webkitMaskPosition = "0 0";
+        loader.style.maskRepeat = "no-repeat";
+        loader.style.webkitMaskRepeat = "no-repeat";
+
+        var fade = TIMING.honeycombCellFade;
+        var spread = Math.max(60, TIMING.honeycomb - fade);
+        var cells = inst.mask.cells;
+
+        for (var i = 0; i < cells.length; i++) {
+          cells[i].el.style.transition = "fill " + fade + "ms linear " + (cells[i].delay * spread).toFixed(0) + "ms";
+        }
+        // force style flush so the transition actually runs
+        void loader.offsetWidth;
+        for (var j = 0; j < cells.length; j++) {
+          cells[j].el.style.fill = "#000";
+        }
+        inst.timers.push(setTimeout(finish, TIMING.honeycomb + 40));
+      } catch (err) {
+        if (window.console) { console.warn("[ArtMagicLoader] honeycomb failed, using short exit.", err); }
+        shortExit();
+      }
+    }
+
+    function shortExit() {
+      loader.style.transition = "opacity " + TIMING.reduceExit + "ms ease-out";
+      loader.style.opacity = "0";
+      inst.timers.push(setTimeout(finish, TIMING.reduceExit + 30));
+    }
+
+    /* ---- completion ---- */
+    function finish() {
+      if (inst.done) { return; }
+      inst.done = true;
+      destroy();
+      if (onComplete) {
+        try { onComplete(); } catch (e) { if (window.console) { console.error(e); } }
+      }
+      try {
+        document.dispatchEvent(new CustomEvent("artmagic:loader-complete", { bubbles: true }));
+      } catch (e) {
+        var ev = document.createEvent("Event");
+        ev.initEvent("artmagic:loader-complete", true, false);
+        document.dispatchEvent(ev);
+      }
+    }
+
+    /* ---- destroy ---- */
+    function destroy() {
+      if (inst.raf) { cancelAnimationFrame(inst.raf); inst.raf = 0; }
+      for (var i = 0; i < inst.timers.length; i++) { clearTimeout(inst.timers[i]); }
+      inst.timers.length = 0;
+      window.removeEventListener("resize", onResize, false);
+      window.removeEventListener("orientationchange", onResize, false);
+      document.removeEventListener("visibilitychange", onVisibility, false);
+      if (inst.mask && inst.mask.svg && inst.mask.svg.parentNode) {
+        inst.mask.svg.parentNode.removeChild(inst.mask.svg);
+      }
+      inst.mask = null;
+      if (loader && loader.parentNode) { loader.parentNode.removeChild(loader); }
+      document.body.style.overflow = prevOverflow;
+      document.body.style.overscrollBehavior = prevOverscroll;
+      if (current === inst) { current = null; }
+    }
+
+    /* ---- resize ---- */
+    var resizeTimer = 0;
+    function onResize() {
+      if (inst.done) { return; }
+      measure();
+      if (!inst.exiting) { render(spinAt(performance.now() - inst.t0), performance.now() - inst.t0); }
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(function () {
+        if (inst.done || !inst.exiting) { return; }
+        // exiting: rebuild the mask for the new size, keep it clearing
+        try {
+          var m = measure();
+          var o = originPoint(m.vw, m.vh);
+          inst.mask = buildMask(m.vw, m.vh, o.x, o.y);
+          var cells = inst.mask.cells;
+          for (var i = 0; i < cells.length; i++) { cells[i].el.style.fill = "#000"; }
+        } catch (e) { /* keep going */ }
+      }, 220);
+    }
+
+    /* ---- visibility ---- */
+    function onVisibility() {
+      if (inst.done) { return; }
+      if (document.hidden) {
+        inst.hiddenAt = performance.now();
+        if (inst.raf) { cancelAnimationFrame(inst.raf); inst.raf = 0; }
+      } else if (inst.hiddenAt) {
+        inst.t0 += performance.now() - inst.hiddenAt;
+        inst.hiddenAt = 0;
+        if (!inst.done) { inst.raf = requestAnimationFrame(tick); }
+      }
+    }
+
+    /* ---- main loop ---- */
+    function tick(now) {
+      if (inst.done) { return; }
+      if (document.hidden) { inst.hiddenAt = now; inst.raf = 0; return; }
+      var t = now - inst.t0;
+
+      if (t < TIMING.settleAt) {
+        render(spinAt(t), t);
+        inst.raf = requestAnimationFrame(tick);
+        return;
+      }
+      if (!inst.settled) {
+        settle();
+      }
+      if (t < TIMING.settleAt + TIMING.hold) {
+        inst.raf = requestAnimationFrame(tick);
+        return;
+      }
+      inst.raf = 0;
+      honeycombExit();
+    }
+
+    /* ---- start ---- */
+    measure();
+    render(TIMING.startSpin, 0);
+    window.addEventListener("resize", onResize, false);
+    window.addEventListener("orientationchange", onResize, false);
+    document.addEventListener("visibilitychange", onVisibility, false);
+
+    inst.t0 = performance.now();
+
+    if (inst.reduced) {
+      // final state at once, brief hold, restrained exit
+      render(0, TIMING.settleAt);
+      settle();
+      if (selectedEl) { selectedEl.classList.remove("is-pulse"); }
+      inst.timers.push(setTimeout(function () {
+        if (inst.done) { return; }
+        inst.exiting = true;
+        shortExit();
+      }, TIMING.reduceHold));
+    } else {
+      inst.raf = requestAnimationFrame(tick);
+    }
+
+    // watchdog: never leave the page covered
+    inst.timers.push(setTimeout(function () {
+      if (inst.done) { return; }
+      if (window.console) { console.warn("[ArtMagicLoader] watchdog fired; forcing cleanup."); }
+      if (!inst.exiting) { inst.exiting = true; shortExit(); }
+      else { finish(); }
+    }, TIMING.total + TIMING.watchdog));
+
+    inst.destroy = destroy;
+    current = inst;
+    return inst;
+  }
+
+  /* =====================================================================
+     5. PUBLIC API
+     ===================================================================== */
+
+  window.ArtMagicLoader = {
+    mount: mount,
+    destroy: function () {
+      if (current && current.destroy) { current.destroy(); }
+      current = null;
+    },
+    isSupported: { honeycomb: maskSupported }
+  };
+
+  // Auto-mount once for this standalone page.
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function () { mount({ container: document.body }); });
+  } else {
+    mount({ container: document.body });
+  }
+})();
+</script>
+</body>
+</html>
